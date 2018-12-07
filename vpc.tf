@@ -14,6 +14,8 @@
 #
 #  Note: to ssh to the server i'll need to update the local known_hosts using:
 #  $ ssh-keyscan -t ecdsa nealalan.com >> ~/.ssh/known_hosts
+#  $ ssh-keyscan -t ecdsa neonaluminum.com >> ~/.ssh/known_hosts
+
 
 # Shared Credentials
 #  located at ~/.aws/credentials the file will have the format:
