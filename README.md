@@ -9,3 +9,4 @@ This repo contains two files:
 ## Result
 My server is at static IP [18.223.13.99](http://18.223.13.99) serving [https://nealalan.com](https://nealalan.com) and [https://neonaluminum.com](https://neonaluminum.com) with redirects from all http:// addresses
 
+[[edit](https://github.com/nealalan/tf-201812-nealalan.com/edit/master/README.md)]
