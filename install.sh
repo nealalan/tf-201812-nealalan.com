@@ -1,12 +1,18 @@
 #!/bin/bash
 
+###############################################################################
 ### Neal Dreher / nealalan.com / nealalan.github.io/tf-201812-nealalan.com
 ### Recreate nealalan.* & neonaluminum.* on Ubuntu (AWS EC2)
 ### 2018-12-06
 ###
+### Something I like to do after install is edit the ~/.bashrc PS1= statment to include (\D{%F %T}) at the beginning
+###
+###############################################################################
 
+## check for remote package updated and refresh the local package reference
 sudo apt -y update
 
+## Put this loop in to wait for a necessary file to be open for apt upgrade
 while :
 do
     if ! [[ `lsof -c /var/lib/dpkg/lock-frontend` ]]
@@ -16,8 +22,7 @@ do
     echo "waiting for open file: /var/lib/dpkg/lock-frontend"
     sleep 1
 done
-echo "done"
-
+echo "file now available: /var/lib/dpkg/lock-frontend"
 sudo apt -y upgrade
 
 # nginx might already be installed...
@@ -50,7 +55,10 @@ ln -s /etc/nginx/sites-enabled /home/ubuntu/sites-enabled
 
 
 sudo tee -a /home/ubuntu/sites-available/nealalan.com << END
-
+server {
+	listen 80;
+	server_name nealalan.com www.nealalan.com;
+}
 server {
 	listen 443 ssl; # managed by Certbot
 	server_name nealalan.com www.nealalan.com;
@@ -85,7 +93,10 @@ server {
 END
 
 sudo tee -a /home/ubuntu/sites-available/neonaluminum.com << END
-
+server {
+	listen 80;
+	server_name neonaluminum.com www.neonaluminum.com;
+}
 server {
 	listen 443 ssl; # managed by Certbot
 	server_name neonaluminum.com www.neonaluminum.com;
