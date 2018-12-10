@@ -33,13 +33,6 @@
 #  $ ssh-keyscan -t ecdsa neonaluminum.com >> ~/.ssh/known_hosts
 #
 ###############################################################################
-# Shared Credentials
-#  located at ~/.aws/credentials the file will have the format:
-#     [profile]
-#     aws_access_key_id = "AKIA..."
-#     aws_secret_access_key = "a+b=3/0..."
-#
-###############################################################################
 # Variables
 ###############################################################################
 variable "project_name" {
@@ -105,7 +98,15 @@ variable "ami" {
 #
 # credentials default location is $HOME/.aws/credentials
 # Docs: https://www.terraform.io/docs/providers/aws/index.html
+#
 ###############################################################################
+# Shared Credentials
+#  located at ~/.aws/credentials the file will have the format:
+#     [profile]
+#     aws_access_key_id = "AKIA..."
+#     aws_secret_access_key = "a+b=3/0..."
+#
+################################################################################
 provider "aws" {
   region                  = "${var.aws_region}"
   shared_credentials_file = "${var.creds_path}"
@@ -248,6 +249,17 @@ resource "aws_default_network_acl" "default" {
 ###############################################################################
 # S T E P   4 3   :  Define the security group for public subnet
 #  enable HTTP/HTTPS, ping and SSH connections from anywhere
+#
+# INBOUND:
+#  Allow from all IP addresses, internal & external
+#  Open port 80 for http requests that will be redirected to https
+#  Open port 443 for https redirect_all_requests_to
+#  Open ICMP traffic
+#   https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol
+#  Open SSH traffic (filtered down by ACL)
+#  Open TCP ports 32769-65535 https://en.wikipedia.org/wiki/Ephemeral_port
+# OUTBOUND:
+#  Allow all outbound traffic
 ###############################################################################
 resource "aws_security_group" "sgpub" {
   name = "public_sg"
@@ -297,6 +309,22 @@ resource "aws_security_group" "sgpub" {
 
 ###############################################################################
 # S T E P   4 6   :  Define the security group for private subnet
+#
+# Instances in a Private subnet are pretty much impossible to create in the
+#  AWS free tier.
+# A method to cheat is to allow ephemeral ports access from the internet and
+#  allow all outbound access to the open internet. This is no longer truly
+#  private - but no one can initiate a connection to the instance without
+#  going through an instance in the private subnet. (Treat the public web
+#  server as a bastion host.)
+#
+# One option is to use a NAT gateway to allow internet access to instances
+#  in private subnets. THERE IS A COST ASSOCIATED TO BOTH NAT OPTIONS!
+# https://docs.aws.amazon.com/vpc/latest/userguide/VPC_NAT_Instance.html
+# https://docs.aws.amazon.com/vpc/latest/userguide/vpc-nat-gateway.html
+#
+# INBOUND:
+#  Allow only traffic from the Internet Public Subnet CIDR
 #   enable MySQL 3306, ping and SSH only from the public subnet
 ###############################################################################
 resource "aws_security_group" "sgpriv"{
@@ -319,6 +347,8 @@ resource "aws_security_group" "sgpriv"{
     to_port = 22
     protocol = "tcp"
     cidr_blocks = ["${var.public_subnet_cidr}"]
+    # something like this also may work???
+    #cidr_blocks = ["${var.instance_assigned_elastic_ip},"/32""]
   }
   ingress {
     from_port = 32768
@@ -381,7 +411,12 @@ resource "aws_instance" "wb" {
 
 ###############################################################################
 # S T E P   6 3   :
+#
 # Assign Existing EIP
+#
+# NOTE: I have an EIP already and assign it in the variables. If it sits
+#  without being assigned to an instance or nat gateway, it will occur hourly
+#  charges!!!!!
 r###############################################################################
 resource "aws_eip_association" "static_ip" {
   instance_id   = "${aws_instance.wb.id}"
