@@ -417,7 +417,7 @@ resource "aws_instance" "wb" {
 # NOTE: I have an EIP already and assign it in the variables. If it sits
 #  without being assigned to an instance or nat gateway, it will occur hourly
 #  charges!!!!!
-r###############################################################################
+################################################################################
 resource "aws_eip_association" "static_ip" {
   instance_id   = "${aws_instance.wb.id}"
   public_ip = "${var.instance_assigned_elastic_ip}"
