@@ -2,7 +2,8 @@
 
 ## Project Goal
 - Fully automate the creation of an NGINX webserver running on AWS EC2.
-- Stay security minded by restricting network access and creating a secure web server. Check yours passes the smell test at:  [Sophos Security Headers Scanner](https://securityheaders.com/) and [SSL Labs test
+- Stay security minded by restricting network access and creating a secure web server. 
+- Verify secure sites: [Sophos Security Headers Scanner](https://securityheaders.com/) and [SSL Labs test
 ](https://www.ssllabs.com/ssltest).
 
 ## Prereqs
@@ -52,7 +53,7 @@ My server is at static IP [18.223.13.99](http://18.223.13.99) serving [https://n
 
 ## NEXT STEPS
 As you move around you'll need to log in to the AWS Console and add your local IP address to the EC2: Network ACLs. Here's an example of one I had in the past...
-
 ![](https://raw.githubusercontent.com/nealalan/EC2_Ubuntu_LEMP/master/ACLsshlist.png)
+Also, I now have the flexibility to totally recreate the websever through a few small script changes if I make major site changes, add a new domain name or need to upgrade to the latest LTS of Ubuntu.
 
 [[edit](https://github.com/nealalan/tf-201812-nealalan.com/edit/master/README.md)]
