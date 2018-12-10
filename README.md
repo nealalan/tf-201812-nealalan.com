@@ -2,7 +2,7 @@
 
 ## Project Goal
 - Fully automate the creation of an NGINX webserver running on AWS EC2.
-- Keep security minded by restricting access and creating a secure web server passing checked by [Sophos Security Headers Scanner](https://securityheaders.com/) and [SSL Labs test
+- Stay security minded by restricting network access and creating a secure web server. Check yours passes the smell test at:  [Sophos Security Headers Scanner](https://securityheaders.com/) and [SSL Labs test
 ](https://www.ssllabs.com/ssltest).
 
 ## Prereqs
