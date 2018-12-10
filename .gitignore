@@ -2,3 +2,5 @@
 .terraform/
 *.tfstate
 *.tfstate.backup
+_config.yml
+Icon*
