@@ -65,25 +65,20 @@ server {
 
 	#  HTTP Strict Transport Security (HSTS) within the 443 SSL server block.
 	add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-	#
 	# Server_tokens off
 	server_tokens off;
-	#
 	# Disable content-type sniffing on some browsers
 	add_header X-Content-Type-Options nosniff;
-	#
 	# Set the X-Frame-Options header to same origin
 	add_header X-Frame-Options SAMEORIGIN;
-	#
 	# enable cross-site scripting filter built in, See: https://www.owasp.org/index.php/List_of_useful_HTTP_headers
 	add_header X-XSS-Protection "1; mode=block";
-	#
 	# disable sites with potentially harmful code, See: https://content-security-policy.com/
 	add_header Content-Security-Policy "default-src 'self'; script-src 'self' ajax.googleapis.com; object-src 'self';";
-	#
 	# referrer policy
 	add_header Referrer-Policy "no-referrer-when-downgrade";
-	#
+  # Feature Policy will allow a site to enable or disable certain browser features and APIs in the interest of better security and privacy
+  Feature-Policy: vibrate 'self'; usermedia *; sync-xhr 'self' https://nealalan.com
 	# certificate transparency, See: https://thecustomizewindows.com/2017/04/new-security-header-expect-ct-header-nginx-directive/
 	add_header Expect-CT max-age=3600;
 	# HTML folder
@@ -102,25 +97,20 @@ server {
 	server_name neonaluminum.com www.neonaluminum.com;
 	#  HTTP Strict Transport Security (HSTS) within the 443 SSL server block.
 	add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-	#
 	# Server_tokens off
 	server_tokens off;
-	#
 	# Disable content-type sniffing on some browsers
 	add_header X-Content-Type-Options nosniff;
-	#
 	# Set the X-Frame-Options header to same origin
 	add_header X-Frame-Options SAMEORIGIN;
-	#
 	# enable cross-site scripting filter built in, See: https://www.owasp.org/index.php/List_of_useful_HTTP_headers
 	add_header X-XSS-Protection "1; mode=block";
-	#
 	# disable sites with potentially harmful code, See: https://content-security-policy.com/
 	add_header Content-Security-Policy "default-src 'self'; script-src 'self' ajax.googleapis.com; object-src 'self';";
-	#
 	# referrer policy
 	add_header Referrer-Policy "no-referrer-when-downgrade";
-	#
+  # Feature Policy will allow a site to enable or disable certain browser features and APIs in the interest of better security and privacy
+  Feature-Policy: vibrate 'self'; usermedia *; sync-xhr 'self' https://neonaluminum.com
 	# certificate transparency, See: https://thecustomizewindows.com/2017/04/new-security-header-expect-ct-header-nginx-directive/
 	add_header Expect-CT max-age=3600;
 	# HTML folder
