@@ -200,7 +200,7 @@ resource "aws_route_table_association" "web-public-rt" {
 #  known usedful IPs: 18.223.13.99
 ###############################################################################
 resource "aws_default_network_acl" "default" {
-  default_network_acl_id = "${aws_vpc.mainvpc.default_network_acl_id}"
+  default_network_acl_id = "${aws_vpc.main.default_network_acl_id}"
   ingress {
     protocol   = -1
     rule_no    = 100
@@ -244,6 +244,7 @@ resource "aws_default_network_acl" "default" {
   tags {
     Name = "nealalan.com_acl"
     Author = "${var.author_name}"
+  }
 }
 
 ###############################################################################
@@ -334,19 +335,19 @@ resource "aws_security_group" "sgpriv"{
     from_port = 3306
     to_port = 3306
     protocol = "tcp"
-    cidr_blocks = ["${var.public_subnet_cidr}"]
+    cidr_blocks = ["${var.subnet_1_cidr}"]
   }
   ingress {
     from_port = -1
     to_port = -1
     protocol = "icmp"
-    cidr_blocks = ["${var.public_subnet_cidr}"]
+    cidr_blocks = ["${var.subnet_1_cidr}"]
   }
   ingress {
     from_port = 22
     to_port = 22
     protocol = "tcp"
-    cidr_blocks = ["${var.public_subnet_cidr}"]
+    cidr_blocks = ["${var.subnet_1_cidr}"]
     # something like this also may work???
     #cidr_blocks = ["${var.instance_assigned_elastic_ip},"/32""]
   }
