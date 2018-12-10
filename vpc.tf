@@ -32,6 +32,13 @@
 #  $ ssh-keyscan -t ecdsa nealalan.com >> ~/.ssh/known_hosts
 #  $ ssh-keyscan -t ecdsa neonaluminum.com >> ~/.ssh/known_hosts
 #
+# NOTES:
+#  It seem the install.sh is too complex and requires user response to complete
+#  Therefore, at this point it must be manually run with these steps:
+#  $ curl https://raw.githubusercontent.com/nealalan/tf-201812-nealalan.com/master/install.sh > install.sh
+#  $ chmod +x ./install.sh
+#  $ .install.sh
+#
 ###############################################################################
 # Variables
 ###############################################################################
@@ -57,6 +64,9 @@ variable "creds_profile" {
 ### static for the cloud variables
 variable "instance_assigned_elastic_ip" {
   default = "18.223.13.99"
+}
+variable "add_my_inbound_ip_cidr" {
+  default = "73.95.223.217/32"
 }
 variable "aws_region" {
   # Note: us-east-2	= OHIO
@@ -206,6 +216,14 @@ resource "aws_default_network_acl" "default" {
     rule_no    = 100
     action     = "allow"
     cidr_block = "18.223.13.99/32"
+    from_port  = 0
+    to_port    = 0
+  }
+  ingress {
+    protocol   = -1
+    rule_no    = 101
+    action     = "allow"
+    cidr_block = "${var.add_my_inbound_ip_cidr}"
     from_port  = 0
     to_port    = 0
   }
@@ -398,22 +416,20 @@ resource "aws_instance" "wb" {
       Name = "${var.project_name}"
       Author = "${var.author_name}"
     }
-    provisioner "file" {
-        source      = "install.sh"
-        destination = "/tmp/install.sh"
-    }
-    provisioner "remote-exec" {
-        inline = [
-          "chmod +x /tmp/install.sh",
-          "/tmp/install.sh",
-        ]
-    }
+#    provisioner "file" {
+#        source      = "install.sh"
+#        destination = "/tmp/install.sh"
+#    }
+#    provisioner "remote-exec" {
+#        inline = [
+#          "chmod +x /tmp/install.sh",
+#          "/tmp/install.sh",
+#        ]
+#    }
 }
 
 ###############################################################################
-# S T E P   6 3   :
-#
-# Assign Existing EIP
+# S T E P   6 3   :  Assign Existing EIP
 #
 # NOTE: I have an EIP already and assign it in the variables. If it sits
 #  without being assigned to an instance or nat gateway, it will occur hourly
