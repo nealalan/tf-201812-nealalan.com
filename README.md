@@ -27,7 +27,6 @@ This repo contains two files:
 My server is at static IP [18.223.13.99](http://18.223.13.99) serving [https://nealalan.com](https://nealalan.com) and [https://neonaluminum.com](https://neonaluminum.com) with redirects from all http:// addresses
 
 ![](https://raw.githubusercontent.com/nealalan/EC2_Ubuntu_LEMP/master/sites-as-https.png)
-![](https://raw.githubusercontent.com/nealalan/EC2_Ubuntu_LEMP/master/sites-as-https.png)
 
 ## NEXT STEPS
 As you move around you'll need to log in to the AWS Console and add your local IP address to the EC2: Network ACLs. Here's an example of one I had in the past...
