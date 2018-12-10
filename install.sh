@@ -11,18 +11,6 @@
 
 ## check for remote package updated and refresh the local package reference
 sudo apt -y update
-
-## Put this loop in to wait for a necessary file to be open for apt upgrade
-while :
-do
-    if ! [[ `lsof -c /var/lib/dpkg/lock-frontend` ]]
-    then
-        break
-    fi
-    echo "waiting for open file: /var/lib/dpkg/lock-frontend"
-    sleep 1
-done
-echo "file now available: /var/lib/dpkg/lock-frontend"
 sudo apt -y upgrade
 
 # nginx might already be installed...
@@ -78,7 +66,7 @@ server {
 	# referrer policy
 	add_header Referrer-Policy "no-referrer-when-downgrade";
   # Feature Policy will allow a site to enable or disable certain browser features and APIs in the interest of better security and privacy
-  Feature-Policy: vibrate 'self'; usermedia *; sync-xhr 'self' https://nealalan.com
+  #Feature-Policy: vibrate 'self'; usermedia *; sync-xhr 'self' https://nealalan.com
 	# certificate transparency, See: https://thecustomizewindows.com/2017/04/new-security-header-expect-ct-header-nginx-directive/
 	add_header Expect-CT max-age=3600;
 	# HTML folder
@@ -110,7 +98,7 @@ server {
 	# referrer policy
 	add_header Referrer-Policy "no-referrer-when-downgrade";
   # Feature Policy will allow a site to enable or disable certain browser features and APIs in the interest of better security and privacy
-  Feature-Policy: vibrate 'self'; usermedia *; sync-xhr 'self' https://neonaluminum.com
+  #Feature-Policy: vibrate 'self'; usermedia *; sync-xhr 'self' https://neonaluminum.com
 	# certificate transparency, See: https://thecustomizewindows.com/2017/04/new-security-header-expect-ct-header-nginx-directive/
 	add_header Expect-CT max-age=3600;
 	# HTML folder
@@ -126,7 +114,8 @@ sudo ln -s /etc/nginx/sites-available/nealalan.com /etc/nginx/sites-enabled/
 sudo ln -s /etc/nginx/sites-available/neonaluminum.com /etc/nginx/sites-enabled/
 
 # restart NGINX
-sudo systemctl restart nginx
+echo sudo systemctl kill nginx
+sudo systemctl kill nginx
 
 # RUN CERTBOT for all domains
 #   https://certbot.eff.org/docs/using.html#certbot-commands
@@ -134,6 +123,8 @@ sudo systemctl restart nginx
 # Note: if you missed some and need to run again you will need to run 'ps aux' to get
 #       the nginx process and use 'sudo kill <pid>' on the nginx main process
 #       Next, run the same command with --expand on the end
+echo
+echo sudo certbot --authenticator standalone --installer nginx -d nealalan.com -d www.nealalan.com -d neonaluminum.com -d www.neonaluminum.com --pre-hook 'sudo service nginx stop' --post-hook 'sudo service nginx start' -m neal@nealalan.com --agree-tos --eff-email --redirect -q
 sudo certbot --authenticator standalone --installer nginx -d nealalan.com -d www.nealalan.com -d neonaluminum.com -d www.neonaluminum.com --pre-hook 'sudo service nginx stop' --post-hook 'sudo service nginx start' -m neal@nealalan.com --agree-tos --eff-email --redirect -q
 
 # Ensure the latest git api is installed
@@ -144,4 +135,4 @@ git clone https://github.com/nealalan/nealalan.com.git /home/ubuntu/nealalan.com
 git clone https://github.com/nealalan/neonaluminum.com.git /home/ubuntu/neonaluminum.com
 
 # OPTIONAL
-#sudo reboot
+sudo reboot
