@@ -14,7 +14,13 @@
   - [VPC CIDR Address](https://github.com/nealalan/EC2_Ubuntu_LEMP/blob/master/README.md#vpc-cidr-address) and [Public Subnet](https://github.com/nealalan/EC2_Ubuntu_LEMP/blob/master/README.md#vpc-public-subnetwork-subnet)
   - [EC2: Network & Security: Key Pairs](https://github.com/nealalan/EC2_Ubuntu_LEMP/blob/master/README.md#ec2-network--security-key-pairs)
   - The first step in [Connect to your instance](https://github.com/nealalan/EC2_Ubuntu_LEMP/blob/master/README.md#connect-to-your-instance) - except here you can connect to ubuntu@domain.com or ubuntu@EIP
-
+- An AWS account with the IAM keys created for use in terraform
+- Install [terraform](https://learn.hashicorp.com/terraform/getting-started/install.html) or search your package manager
+  - Configure terraform with IAM keys
+- Optional:
+  - Atom installed
+  - Github installed
+  
 ## Files
 This repo contains two files:
 - [vpc.tf](https://github.com/nealalan/tf-201812-nealalan.com/blob/master/vpc.tf) - a consolidated terraform file (infrastructure as code) to create a VPC, associated components and an EC2 Ubuntu instance in a Public Subnet
@@ -22,6 +28,22 @@ This repo contains two files:
   - need to implement the logic to automatically push (scp?) the install.sh file to the EC2 instance and run it automatically
 - [install.sh](https://github.com/nealalan/tf-201812-nealalan.com/blob/master/install.sh) - shell script to configure the Ubuntu instance to configure NGINX web server with secure websites (https)
   - website are automatically pulled from git repos for respective sites
+
+## Steps / Commands
+I used... 
+1. git clone this repo
+2. terraform init
+3. terraform plan
+4. terraform apply
+5. ssh -i priv_key.pem ubuntu@ip
+6. curl https://raw.githubusercontent.com/nealalan/tf-201812-nealalan.com/master/install.sh > install.sh
+7. chmod +x ./install.sh
+8. .install.sh
+
+Optional:
+- terraform plan -destroy
+- terraform destroy
+
 
 ## Result
 My server is at static IP [18.223.13.99](http://18.223.13.99) serving [https://nealalan.com](https://nealalan.com) and [https://neonaluminum.com](https://neonaluminum.com) with redirects from all http:// addresses
