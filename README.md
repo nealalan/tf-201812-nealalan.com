@@ -56,6 +56,25 @@ As you move around you'll need to log in to the AWS Console and add your local I
 ![](https://raw.githubusercontent.com/nealalan/EC2_Ubuntu_LEMP/master/ACLsshlist.png)
 Also, I now have the flexibility to totally recreate the websever through a few small script changes if I make major site changes, add a new domain name or need to upgrade to the latest LTS of Ubuntu.
 
+## Installing MariaDQ 
+And setting it to have a Root PW...
+```bash
+$ sudo apt install mariadb-client
+$ sudo apt install mariadb-server
+$ sudo passwd root (NealAlanDreher12)
+$ sudo mysql -u root
+# Disable plugin authentication for root
+> use mysql;
+> update user set plugin='' where User='root';
+> flush privileges;
+> exit
+$ sudo systemctl restart mariadb.service
+$ sudo mysql_secure_installation
+# verity root auth works
+$ sudo mysql -u root
+$ sudo mysql -u root -p
+```
+
 ## Fixing Errors
 Within a few days I messed up my Ubuntu instance. The solution was clearly going to take longer than 15 minutes. So here's what I did, thanks to terraform:
 1. Grab what is managed by terraform
