@@ -56,4 +56,29 @@ As you move around you'll need to log in to the AWS Console and add your local I
 ![](https://raw.githubusercontent.com/nealalan/EC2_Ubuntu_LEMP/master/ACLsshlist.png)
 Also, I now have the flexibility to totally recreate the websever through a few small script changes if I make major site changes, add a new domain name or need to upgrade to the latest LTS of Ubuntu.
 
+## Fixing Errors
+Within a few days I messed up my Ubuntu instance. The solution was clearly going to take longer than 15 minutes. So here's what I did, thanks to terraform:
+1. Grab what is managed by terraform
+![](https://github.com/nealalan/tf-201812-nealalan.com/blob/master/images/Screen%20Shot%202018-12-10%20at%209.19.52%20PM.jpg?raw=true)
+2. Mark the Ubuntu instance as tainted for destruction
+```bash
+terraform taint aws_instance.wb
+```
+3. Verify what will happen (a side effect was my ACLs and SGs will be cleaned up since I was running an outdated lab that requried me to open some ports)
+```bash
+$ terraform plan
+```
+![](https://github.com/nealalan/tf-201812-nealalan.com/blob/master/images/Screen%20Shot%202018-12-10%20at%209.17.39%20PM.jpg?raw=true)
+4. Run!
+```bash
+$ terraform apply
+```
+5. Setup Ubuntu to host my webserver again
+```bash
+$ curl https://raw.githubusercontent.com/nealalan/tf-201812-nealalan.com/master/install.sh > install.sh
+$ chmod +x ./install.sh
+$ .install.sh
+```
+6. Consider running another EC2 instance when I want to plan with some labs?!?!?! I can alwauys assign a subdomain to the lab instance.
+
 [[edit](https://github.com/nealalan/tf-201812-nealalan.com/edit/master/README.md)]
