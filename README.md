@@ -79,6 +79,6 @@ $ curl https://raw.githubusercontent.com/nealalan/tf-201812-nealalan.com/master/
 $ chmod +x ./install.sh
 $ .install.sh
 ```
-6. Consider running another EC2 instance when I want to plan with some labs?!?!?! I can alwauys assign a subdomain to the lab instance.
+6. Consider using virtuanenv or even running another EC2 instance when I want to plan with some labs?!?!?! I can alwauys assign a subdomain to a lab instance.
 
 [[edit](https://github.com/nealalan/tf-201812-nealalan.com/edit/master/README.md)]
