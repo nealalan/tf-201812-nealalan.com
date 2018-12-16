@@ -128,11 +128,12 @@ echo sudo certbot --authenticator standalone --installer nginx -d nealalan.com -
 sudo certbot --authenticator standalone --installer nginx -d nealalan.com -d www.nealalan.com -d neonaluminum.com -d www.neonaluminum.com --pre-hook 'sudo service nginx stop' --post-hook 'sudo service nginx start' -m neal@nealalan.com --agree-tos --eff-email --redirect -q
 
 # Ensure the latest git api is installed
-sudo apt install git
+sudo apt install -y git
 
 # pull the websites from github down to the webserver
 git clone https://github.com/nealalan/nealalan.com.git /home/ubuntu/nealalan.com
 git clone https://github.com/nealalan/neonaluminum.com.git /home/ubuntu/neonaluminum.com
 
+sudo apt install -y speedtest-cli toilet
 # OPTIONAL
 sudo reboot
