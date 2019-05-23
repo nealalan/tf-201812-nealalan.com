@@ -21,17 +21,35 @@
 #
 ###############################################################################
 # USE:
+#  Change the project and author name as needed
+#
 #  $ terraform init
 #  $ terraform plan
 #  $ terraform apply
 #
-#  $ terraform plan -destroy_grace_seconds
+#  $ terraform plan -destroy
 #  $ terraform destroy
 #
 #  Note: to ssh to the server i'll need to update the local known_hosts using:
 #  $ ssh-keyscan -t ecdsa nealalan.com >> ~/.ssh/known_hosts
 #  $ ssh-keyscan -t ecdsa neonaluminum.com >> ~/.ssh/known_hosts
 #
+# NOTES:
+#  It seem the install.sh is too complex and requires user response to complete
+#  Therefore, at this point it must be manually run with these steps:
+#  $ curl https://raw.githubusercontent.com/nealalan/tf-201812-nealalan.com/
+#     master/install.sh > install.sh
+#  $ chmod +x ./install.sh
+#  $ .install.sh
+#
+###############################################################################
+# CHANGE 2019-05-23
+#  Changed SSH access control from the Network ACL to a separate SG 
+#   to allow better visibility to access control at the instance level
+#  Add ports 8080-8081 
+#
+#  Future change:
+#   - Add logic to curl down & chmod install.sh
 ###############################################################################
 # Variables
 ###############################################################################
@@ -40,6 +58,9 @@ variable "project_name" {
 }
 variable "author_name" {
   default = "terraform"
+}
+variable "acl_name" {
+  default = "nealalan.com_acl"
 }
 ### local machine variables!!!!
 variable "pub_key_path" {
@@ -57,6 +78,12 @@ variable "creds_profile" {
 ### static for the cloud variables
 variable "instance_assigned_elastic_ip" {
   default = "18.223.13.99"
+}
+variable "instance_assigned_elastic_ip_cidr" {
+  default = "18.223.13.99/32"
+}
+variable "add_my_inbound_ip_cidr" {
+  default = "73.95.223.217/32"
 }
 variable "aws_region" {
   # Note: us-east-2	= OHIO
@@ -94,7 +121,7 @@ variable "ami" {
 }
 
 ###############################################################################
-# S T E P   0 1   :   Configure the AWS Provider
+# 01 : Configure the AWS Provider
 #
 # credentials default location is $HOME/.aws/credentials
 # Docs: https://www.terraform.io/docs/providers/aws/index.html
@@ -116,7 +143,7 @@ provider "aws" {
 }
 
 ###############################################################################
-# S T E P   1 0   :   Create a Virtual Private Cloud
+# 02 : Create a Virtual Private Cloud
 #
 #   instance_tenancy
 #     [default] = Your instance runs on shared hardware.
@@ -136,7 +163,7 @@ resource "aws_vpc" "main" {
 }
 
 ###############################################################################
-# S T E P   2 0   :   Create Subnets
+# 03 : Create Subnets
 #
 # Public Subnet: to be used for a bastion host or public website
 # Private Subnet: not currently used for this project but it's free
@@ -161,7 +188,7 @@ resource "aws_subnet" "private-subnet" {
 }
 
 ###############################################################################
-# S T E P   3 0   :   Create the internet gateway
+# 04 : Create the internet gateway
 ###############################################################################
 resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.main.id}"
@@ -172,7 +199,7 @@ resource "aws_internet_gateway" "gw" {
 }
 
 ###############################################################################
-# S T E P   3 3   :   Create the route table
+# 05 : Create the route table
 ###############################################################################
 resource "aws_route_table" "web-public-rt" {
   vpc_id = "${aws_vpc.main.id}"
@@ -187,7 +214,7 @@ resource "aws_route_table" "web-public-rt" {
 }
 
 ###############################################################################
-# S T E P   3 6   :   Assign the route table to the public Subnet
+# 06 : Assign the route table to the public Subnet
 ###############################################################################
 resource "aws_route_table_association" "web-public-rt" {
   subnet_id = "${aws_subnet.subnet-1.id}"
@@ -195,7 +222,7 @@ resource "aws_route_table_association" "web-public-rt" {
 }
 
 ###############################################################################
-# S T E P   4 0   :  Create an ACL for the EC2 instance
+# 07 : Create an ACL for the EC2 instance
 #
 #  known usedful IPs: 18.223.13.99
 ###############################################################################
@@ -205,10 +232,26 @@ resource "aws_default_network_acl" "default" {
     protocol   = -1
     rule_no    = 100
     action     = "allow"
-    cidr_block = "18.223.13.99/32"
+    cidr_block = "${var.instance_assigned_elastic_ip_cidr}"
     from_port  = 0
     to_port    = 0
   }
+  ingress {
+    protocol   = -1
+    rule_no    = 101
+    action     = "allow"
+    cidr_block = "${var.add_my_inbound_ip_cidr}"
+    from_port  = 0
+    to_port    = 0
+  } 
+  ingress {
+    protocol   = 6
+    rule_no    = 200
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 22
+    to_port    = 22
+  }  
   ingress {
     protocol   = 6
     rule_no    = 300
@@ -227,11 +270,19 @@ resource "aws_default_network_acl" "default" {
   }
   ingress {
     protocol   = 6
+    rule_no    = 302
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 8080
+    to_port    = 8081
+  }
+  ingress {
+    protocol   = 6
     rule_no    = 400
     action     = "allow"
     cidr_block = "0.0.0.0/0"
     from_port  = 32768
-    to_port    = 65535
+    to_port    = 60999
   }
   egress {
     protocol   = -1
@@ -242,13 +293,13 @@ resource "aws_default_network_acl" "default" {
     to_port    = 0
   }
   tags {
-    Name = "nealalan.com_acl"
+    Name = "${var.acl_name}"
     Author = "${var.author_name}"
   }
 }
 
 ###############################################################################
-# S T E P   4 3   :  Define the security group for public subnet
+# 08 : Define the security group for public subnet & SSH access
 #  enable HTTP/HTTPS, ping and SSH connections from anywhere
 #
 # INBOUND:
@@ -257,14 +308,15 @@ resource "aws_default_network_acl" "default" {
 #  Open port 443 for https redirect_all_requests_to
 #  Open ICMP traffic
 #   https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol
-#  Open SSH traffic (filtered down by ACL)
-#  Open TCP ports 32769-65535 https://en.wikipedia.org/wiki/Ephemeral_port
+#  DO NOT Open SSH traffic (not filtered down by ACL)
+#  Open TCP ports 32769-60999 https://en.wikipedia.org/wiki/Ephemeral_port
+#    ports are set in instance at /proc/sys/net/ipv4/ip_local_port_range
 # OUTBOUND:
 #  Allow all outbound traffic
 ###############################################################################
 resource "aws_security_group" "sgpub" {
   name = "public_sg"
-  description = "Allow incoming HTTP connections & SSH access"
+  description = "Allow incoming HTTP connections"
   ingress {
     from_port = 80
     to_port = 80
@@ -278,20 +330,27 @@ resource "aws_security_group" "sgpub" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
+    from_port = 8080
+    to_port = 8081
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
     from_port = -1
     to_port = -1
     protocol = "icmp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  ingress {
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
-    cidr_blocks =  ["0.0.0.0/0"]
+# SEPARATE SG FOR SSH ACCESS
+#  ingress {
+#    from_port = 22
+#    to_port = 22
+#    protocol = "tcp"
+#    cidr_blocks =  ["0.0.0.0/0"]
   }
   ingress {
     from_port = 32768
-    to_port = 65535
+    to_port = 60999
     protocol = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -307,16 +366,20 @@ resource "aws_security_group" "sgpub" {
     Author = "${var.author_name}"
   }
 }
+resource "aws_security_group" "sgpubssh" {
+  name = "public_sg_SSH"
+  description = "Allow incoming SSH connections"
+}
 
 ###############################################################################
-# S T E P   4 6   :  Define the security group for private subnet
+# 10 : Define the security group for private subnet
 #
 # Instances in a Private subnet are pretty much impossible to create in the
 #  AWS free tier.
 # A method to cheat is to allow ephemeral ports access from the internet and
 #  allow all outbound access to the open internet. This is no longer truly
 #  private - but no one can initiate a connection to the instance without
-#  going through an instance in the private subnet. (Treat the public web
+#  going through an instance in the public subnet. (Treat the public web
 #  server as a bastion host.)
 #
 # One option is to use a NAT gateway to allow internet access to instances
@@ -371,7 +434,7 @@ resource "aws_security_group" "sgpriv"{
 }
 
 ###############################################################################
-# S T E P   5 0   :  Upload Public key for access to EC2 instances
+# 11 : Upload Public key for access to EC2 instances
 ###############################################################################
 resource "aws_key_pair" "default" {
   key_name = "${var.pub_key_name}"
@@ -379,7 +442,7 @@ resource "aws_key_pair" "default" {
 }
 
 ###############################################################################
-# S T E P   6 0   :  Create EC2 Instance
+# 12 : Create EC2 Instance
 #
 # Execute install.sh for Ubuntu to configure
 #   NGINX, CERTBOT
@@ -391,29 +454,28 @@ resource "aws_instance" "wb" {
     instance_type = "t2.micro"
     key_name = "${var.pub_key_name}"
     subnet_id = "${aws_subnet.subnet-1.id}"
-    vpc_security_group_ids = ["${aws_security_group.sgpub.id}"]
+    vpc_security_group_ids = ["${aws_security_group.sgpub.id}", 
+                              "${aws_security_group.sgpubssh.id}"]
     associate_public_ip_address = true
     availability_zone = "${var.az_a}"
     tags {
       Name = "${var.project_name}"
       Author = "${var.author_name}"
     }
-    provisioner "file" {
-        source      = "install.sh"
-        destination = "/tmp/install.sh"
-    }
-    provisioner "remote-exec" {
-        inline = [
-          "chmod +x /tmp/install.sh",
-          "/tmp/install.sh",
-        ]
-    }
+#    provisioner "file" {
+#        source      = "install.sh"
+#        destination = "/tmp/install.sh"
+#    }
+#    provisioner "remote-exec" {
+#        inline = [
+#          "chmod +x /tmp/install.sh",
+#          "/tmp/install.sh",
+#        ]
+#    }
 }
 
 ###############################################################################
-# S T E P   6 3   :
-#
-# Assign Existing EIP
+# 13 : Assign Existing EIP
 #
 # NOTE: I have an EIP already and assign it in the variables. If it sits
 #  without being assigned to an instance or nat gateway, it will occur hourly

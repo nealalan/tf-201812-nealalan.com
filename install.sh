@@ -7,6 +7,8 @@
 ###
 ### Something I like to do after install is edit the ~/.bashrc PS1= statment to include (\D{%F %T}) at the beginning
 ###
+### UPDATES
+### - added additional subdomains and node and pm2
 ###############################################################################
 
 ## check for remote package updated and refresh the local package reference
@@ -20,10 +22,12 @@ sudo apt install -y nginx
 echo "nealalan.com" | sudo tee /etc/hostname
 
 # add domain names as localhosts
-sudo sed -i '1s/^/127.0.0.1 nealalan.com\n/' /etc/hosts
-sudo sed -i '1s/^/127.0.0.1 www.nealalan.com\n/' /etc/hosts
-sudo sed -i '1s/^/127.0.0.1 neonaluminum.com\n/' /etc/hosts
+sudo sed -i '1s/^/127.0.0.1 ozark.neonaluminum.com\n/' /etc/hosts
+sudo sed -i '1s/^/127.0.0.1 fire.neonaluminum.com\n/' /etc/hosts
 sudo sed -i '1s/^/127.0.0.1 www.neonaluminum.com\n/' /etc/hosts
+sudo sed -i '1s/^/127.0.0.1 neonaluminum.com\n/' /etc/hosts
+sudo sed -i '1s/^/127.0.0.1 www.nealalan.com\n/' /etc/hosts
+sudo sed -i '1s/^/127.0.0.1 nealalan.com\n/' /etc/hosts
 
 # certbot
 sudo add-apt-repository -y ppa:certbot/certbot
@@ -34,21 +38,35 @@ sudo apt -y install python-certbot-nginx
 # Configure NGINX webserver files
 sudo mkdir -p /var/www/nealalan.com/html
 sudo mkdir -p /var/www/neonaluminum.com/html
+sudo mkdir -p /var/www/fire.neonaluminum.com
+sudo mkdir -p /var/www/ozark.neonaluminum.com
+
 ln -s /var/www/nealalan.com/html /home/ubuntu/nealalan.com
 ln -s /var/www/neonaluminum.com/html /home/ubuntu/neonaluminum.com
+ln -s /var/www/fire.neonaluminum.com /home/ubuntu/fire.neonaluminum.com
+ln -s /var/www/ozark.neonaluminum.com /home/ubuntu/ozark.neonaluminum.com
+
 sudo chown -R ubuntu:ubuntu /var/www/nealalan.com/html
 sudo chown -R ubuntu:ubuntu /var/www/neonaluminum.com/html
+sudo chown -R ubuntu:ubuntu /var/www/fire.neonaluminum.com
+sudo chown -R ubuntu:ubuntu /var/www/ozark.neonaluminum.com
+
 ln -s /etc/nginx/sites-available /home/ubuntu/sites-available
 ln -s /etc/nginx/sites-enabled /home/ubuntu/sites-enabled
-
 
 sudo tee -a /home/ubuntu/sites-available/nealalan.com << END
 server {
 	listen 80;
 	server_name nealalan.com www.nealalan.com;
+	if ($host = nealalan.com) {
+		return 301 https://$host$request_uri;
+  }
+  if ($host = www.nealalan.com) {
+		return 301 https://$host$request_uri;
+  }
 }
 server {
-	listen 443 ssl; # managed by Certbot
+	listen 443 ssl;
 	server_name nealalan.com www.nealalan.com;
 
 	#  HTTP Strict Transport Security (HSTS) within the 443 SSL server block.
@@ -65,8 +83,6 @@ server {
 	add_header Content-Security-Policy "default-src 'self'; script-src 'self' ajax.googleapis.com; object-src 'self';";
 	# referrer policy
 	add_header Referrer-Policy "no-referrer-when-downgrade";
-  # Feature Policy will allow a site to enable or disable certain browser features and APIs in the interest of better security and privacy
-  #Feature-Policy: vibrate 'self'; usermedia *; sync-xhr 'self' https://nealalan.com
 	# certificate transparency, See: https://thecustomizewindows.com/2017/04/new-security-header-expect-ct-header-nginx-directive/
 	add_header Expect-CT max-age=3600;
 	# HTML folder
@@ -79,9 +95,15 @@ sudo tee -a /home/ubuntu/sites-available/neonaluminum.com << END
 server {
 	listen 80;
 	server_name neonaluminum.com www.neonaluminum.com;
+	if ($host = neonaluminum.com) {
+			return 301 https://$host$request_uri;
+	}
+	if ($host = www.neonaluminum.com) {
+		return 301 https://$host$request_uri;
+	}
 }
 server {
-	listen 443 ssl; # managed by Certbot
+	listen 443 ssl;
 	server_name neonaluminum.com www.neonaluminum.com;
 	#  HTTP Strict Transport Security (HSTS) within the 443 SSL server block.
 	add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
@@ -97,14 +119,61 @@ server {
 	add_header Content-Security-Policy "default-src 'self'; script-src 'self' ajax.googleapis.com; object-src 'self';";
 	# referrer policy
 	add_header Referrer-Policy "no-referrer-when-downgrade";
-  # Feature Policy will allow a site to enable or disable certain browser features and APIs in the interest of better security and privacy
-  #Feature-Policy: vibrate 'self'; usermedia *; sync-xhr 'self' https://neonaluminum.com
 	# certificate transparency, See: https://thecustomizewindows.com/2017/04/new-security-header-expect-ct-header-nginx-directive/
 	add_header Expect-CT max-age=3600;
 	# HTML folder
 	root /var/www/neonaluminum.com/html;
 	index index.html;
 }
+END
+
+sudo tee -a /home/ubuntu/sites-available/fire.neonaluminum.com << END
+server {
+	listen 80;
+	server_name fire.neonaluminum.com;
+  if ($host = fire.neonaluminum.com) {
+    return 301 https://$host$request_uri;
+  }
+}
+server {
+	listen 443 ssl;
+  server_name fire.neonaluminum.com;
+	root /var/www/fire.neonaluminum.com;
+	location / {
+		# reverse proxy and serve the app
+		proxy_pass http://localhost:8080/;
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection 'upgrade';
+		proxy_set_header Host $host;
+		proxy_set_header X-Forwarded-Proto $scheme;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+	}
+END
+sudo tee -a /home/ubuntu/sites-available/ozark.neonaluminum.com << END
+server {
+	listen 80;
+	server_name ozark.neonaluminum.com;
+  if ($host = ozark.neonaluminum.com) {
+    return 301 https://$host$request_uri;
+  }
+}
+server {
+	listen 443 ssl;
+  server_name ozark.neonaluminum.com;
+	root /var/www/ozark.neonaluminum.com;
+	location / {
+		# reverse proxy and serve the app
+		proxy_pass http://localhost:8081/;
+		proxy_http_version 1.1;
+		proxy_set_header Upgrade $http_upgrade;
+		proxy_set_header Connection 'upgrade';
+		proxy_set_header Host $host;
+		proxy_set_header X-Forwarded-Proto $scheme;
+		proxy_set_header X-Real-IP $remote_addr;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+	}
 END
 
 sudo rm /home/ubuntu/sites-enabled/default
@@ -114,8 +183,7 @@ sudo ln -s /etc/nginx/sites-available/nealalan.com /etc/nginx/sites-enabled/
 sudo ln -s /etc/nginx/sites-available/neonaluminum.com /etc/nginx/sites-enabled/
 
 # restart NGINX
-echo sudo systemctl kill nginx
-sudo systemctl kill nginx
+sudo systemctl restart nginx
 
 # RUN CERTBOT for all domains
 #   https://certbot.eff.org/docs/using.html#certbot-commands
@@ -124,8 +192,10 @@ sudo systemctl kill nginx
 #       the nginx process and use 'sudo kill <pid>' on the nginx main process
 #       Next, run the same command with --expand on the end
 echo
-echo sudo certbot --authenticator standalone --installer nginx -d nealalan.com -d www.nealalan.com -d neonaluminum.com -d www.neonaluminum.com --pre-hook 'sudo service nginx stop' --post-hook 'sudo service nginx start' -m neal@nealalan.com --agree-tos --eff-email --redirect -q
-sudo certbot --authenticator standalone --installer nginx -d nealalan.com -d www.nealalan.com -d neonaluminum.com -d www.neonaluminum.com --pre-hook 'sudo service nginx stop' --post-hook 'sudo service nginx start' -m neal@nealalan.com --agree-tos --eff-email --redirect -q
+echo sudo certbot --authenticator standalone --installer nginx -d nealalan.com -d www.nealalan.com -d neonaluminum.com -d www.neonaluminum.com -d fire.neonaluminum.com -d ozark.neonaluminum.com --pre-hook 'sudo service nginx stop' --post-hook 'sudo service nginx start' -m neal@nealalan.com --agree-tos --eff-email --redirect -q
+sudo certbot --authenticator standalone --installer nginx -d nealalan.com -d www.nealalan.com -d neonaluminum.com -d www.neonaluminum.com -d fire.neonaluminum.com -d ozark.neonaluminum.com --pre-hook 'sudo service nginx stop' --post-hook 'sudo service nginx start' -m neal@nealalan.com --agree-tos --eff-email --redirect -q
+
+sudo systemctl restart nginx
 
 # Ensure the latest git api is installed
 sudo apt install git
@@ -134,5 +204,40 @@ sudo apt install git
 git clone https://github.com/nealalan/nealalan.com.git /home/ubuntu/nealalan.com
 git clone https://github.com/nealalan/neonaluminum.com.git /home/ubuntu/neonaluminum.com
 
+
+# install nodejs LTS versions - apt will not do this!
+##sudo apt -y install nodejs
+##sudo apt -y install npm
+curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+sudo apt install -y nodejs gcc g++ make build-essential
+sudo apt autoremove -y
+
+# create hello.js
+sudo tee -a /home/ubuntu/sites-available/fire.neonaluminum.com/hello.js << END
+#!/usr/bin/env nodejs
+var http = require('http');
+http.createServer(function (req, res) {
+  res.writeHead(200, {'Content-Type': 'text/plain'});
+  res.end('Hello World\n');
+}).listen(8080, 'localhost');
+console.log('Server running at http://localhost:8080/');
+END
+
+# install the latest version of PM2 to manage production nodejs apps
+sudo npm install pm2@latest -g
+
+# start PM2 & set it up to automatically start on system reboot
+pm2 start /home/ubuntu/sites-available/fire.neonaluminum.com/hello.js
+pm2 startup systemd
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu -hp /home/ubuntu
+pm2 save
+# allow without sudo: $ pm2 status
+sudo chown ubuntu:ubuntu /home/ubuntu/.pm2/rpc.sock /home/neal/.pm2/pub.sock
+# list pm2 processes
+pm2 ls
+# ALSO: pm2 monit | info <id> | stop <id> | start <path>
+
+
+
 # OPTIONAL
-sudo reboot
+#sudo reboot
