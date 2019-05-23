@@ -1,0 +1,14 @@
+# ADDITIONS FOR THE .bashrc file
+#
+# update the .bashrc PS1 line to my color prefs and with the date/time
+# PS1="(\D{%F %T}) \[\033[36m\]\u\[\033[m\]@\[\033[32m\]\h:\[\033[33;1m\]\w\[\033[m\]\$ "
+# 
+
+curl https://api.github.com/zen
+curl -4 ifconfig.co
+# OF do a "$ sudo apt install -y toilet" to use
+curl -s4 ifconfig.co | toilet -w 120 -f mono12
+echo
+echo "Virtual Env: $ source ~/venvs/flask1804/bin/activate"
+echo "         and $ source ~/venvs/api/bin/activate"
+

@@ -37,6 +37,7 @@
 # NOTES:
 #  It seem the install.sh is too complex and requires user response to complete
 #  Therefore, at this point it must be manually run with these steps:
+<<<<<<< HEAD
 #  $ curl https://raw.githubusercontent.com/nealalan/tf-201812-nealalan.com/
 #     master/install.sh > install.sh
 #  $ chmod +x ./install.sh
@@ -50,6 +51,12 @@
 #
 #  Future change:
 #   - Add logic to curl down & chmod install.sh
+=======
+#  $ curl https://raw.githubusercontent.com/nealalan/tf-201812-nealalan.com/master/install.sh > install.sh
+#  $ chmod +x ./install.sh
+#  $ .install.sh
+#
+>>>>>>> b31b627542bc010fef4b5803df3ef33e95b5be3b
 ###############################################################################
 # Variables
 ###############################################################################
@@ -79,9 +86,12 @@ variable "creds_profile" {
 variable "instance_assigned_elastic_ip" {
   default = "18.223.13.99"
 }
+<<<<<<< HEAD
 variable "instance_assigned_elastic_ip_cidr" {
   default = "18.223.13.99/32"
 }
+=======
+>>>>>>> b31b627542bc010fef4b5803df3ef33e95b5be3b
 variable "add_my_inbound_ip_cidr" {
   default = "73.95.223.217/32"
 }
@@ -243,6 +253,7 @@ resource "aws_default_network_acl" "default" {
     cidr_block = "${var.add_my_inbound_ip_cidr}"
     from_port  = 0
     to_port    = 0
+<<<<<<< HEAD
   } 
   ingress {
     protocol   = 6
@@ -252,6 +263,9 @@ resource "aws_default_network_acl" "default" {
     from_port  = 22
     to_port    = 22
   }  
+=======
+  }
+>>>>>>> b31b627542bc010fef4b5803df3ef33e95b5be3b
   ingress {
     protocol   = 6
     rule_no    = 300
@@ -475,7 +489,11 @@ resource "aws_instance" "wb" {
 }
 
 ###############################################################################
+<<<<<<< HEAD
 # 13 : Assign Existing EIP
+=======
+# S T E P   6 3   :  Assign Existing EIP
+>>>>>>> b31b627542bc010fef4b5803df3ef33e95b5be3b
 #
 # NOTE: I have an EIP already and assign it in the variables. If it sits
 #  without being assigned to an instance or nat gateway, it will occur hourly
