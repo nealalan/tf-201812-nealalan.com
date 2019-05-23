@@ -204,7 +204,6 @@ sudo apt install -y git
 git clone https://github.com/nealalan/nealalan.com.git /home/ubuntu/nealalan.com
 git clone https://github.com/nealalan/neonaluminum.com.git /home/ubuntu/neonaluminum.com
 
-<<<<<<< HEAD
 
 # install nodejs LTS versions - apt will not do this!
 ##sudo apt -y install nodejs
@@ -239,9 +238,7 @@ pm2 ls
 # ALSO: pm2 monit | info <id> | stop <id> | start <path>
 
 
+sudo apt install -y speedtest-cli
 
-=======
-sudo apt install -y speedtest-cli toilet
->>>>>>> b31b627542bc010fef4b5803df3ef33e95b5be3b
 # OPTIONAL
 #sudo reboot
