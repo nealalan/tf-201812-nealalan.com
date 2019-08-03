@@ -83,6 +83,8 @@ server {
 	add_header Content-Security-Policy "default-src 'self'; script-src 'self' ajax.googleapis.com; object-src 'self';";
 	# referrer policy
 	add_header Referrer-Policy "no-referrer-when-downgrade";
+	# webappsec-feature-policy
+	Feature-Policy: microphone 'none'; camera 'none'; notifications 'none'; push 'none'
 	# certificate transparency, See: https://thecustomizewindows.com/2017/04/new-security-header-expect-ct-header-nginx-directive/
 	add_header Expect-CT max-age=3600;
 	# HTML folder
@@ -105,6 +107,7 @@ server {
 server {
 	listen 443 ssl;
 	server_name neonaluminum.com www.neonaluminum.com;
+
 	#  HTTP Strict Transport Security (HSTS) within the 443 SSL server block.
 	add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 	# Server_tokens off
@@ -119,6 +122,8 @@ server {
 	add_header Content-Security-Policy "default-src 'self'; script-src 'self' ajax.googleapis.com; object-src 'self';";
 	# referrer policy
 	add_header Referrer-Policy "no-referrer-when-downgrade";
+	# webappsec-feature-policy
+	Feature-Policy: microphone 'none'; camera 'none'; notifications 'none'; push 'none'
 	# certificate transparency, See: https://thecustomizewindows.com/2017/04/new-security-header-expect-ct-header-nginx-directive/
 	add_header Expect-CT max-age=3600;
 	# HTML folder
@@ -137,7 +142,7 @@ server {
 }
 server {
 	listen 443 ssl;
-  server_name fire.neonaluminum.com;
+  	server_name fire.neonaluminum.com;
 	root /var/www/fire.neonaluminum.com;
 	location / {
 		# reverse proxy and serve the app
@@ -161,7 +166,7 @@ server {
 }
 server {
 	listen 443 ssl;
-  server_name ozark.neonaluminum.com;
+  	server_name ozark.neonaluminum.com;
 	root /var/www/ozark.neonaluminum.com;
 	location / {
 		# reverse proxy and serve the app
@@ -179,10 +184,12 @@ END
 sudo rm /home/ubuntu/sites-enabled/default
 
 # CREATE LINKS FROM SITES-AVAILABLE TO SITES-ENABLED
+echo "CREATING LINKS TO NGINX CONFIG FILES"
 sudo ln -s /etc/nginx/sites-available/nealalan.com /etc/nginx/sites-enabled/
 sudo ln -s /etc/nginx/sites-available/neonaluminum.com /etc/nginx/sites-enabled/
 
 # restart NGINX
+echo "REBOOTING NGINX"
 sudo systemctl restart nginx
 
 # RUN CERTBOT for all domains
@@ -191,28 +198,29 @@ sudo systemctl restart nginx
 # Note: if you missed some and need to run again you will need to run 'ps aux' to get
 #       the nginx process and use 'sudo kill <pid>' on the nginx main process
 #       Next, run the same command with --expand on the end
-echo
-echo sudo certbot --authenticator standalone --installer nginx -d nealalan.com -d www.nealalan.com -d neonaluminum.com -d www.neonaluminum.com -d fire.neonaluminum.com -d ozark.neonaluminum.com --pre-hook 'sudo service nginx stop' --post-hook 'sudo service nginx start' -m neal@nealalan.com --agree-tos --eff-email --redirect -q
+echo "RUN CERTBOT ON ALL DOMAINS"echo "sudo certbot --authenticator standalone --installer nginx -d nealalan.com -d www.nealalan.com -d neonaluminum.com -d www.neonaluminum.com -d fire.neonaluminum.com -d ozark.neonaluminum.com --pre-hook 'sudo service nginx stop' --post-hook 'sudo service nginx start' -m neal@nealalan.com --agree-tos --eff-email --redirect -q"
 sudo certbot --authenticator standalone --installer nginx -d nealalan.com -d www.nealalan.com -d neonaluminum.com -d www.neonaluminum.com -d fire.neonaluminum.com -d ozark.neonaluminum.com --pre-hook 'sudo service nginx stop' --post-hook 'sudo service nginx start' -m neal@nealalan.com --agree-tos --eff-email --redirect -q
-
+echo "REBOOTING NGINX"
 sudo systemctl restart nginx
 
 # Ensure the latest git api is installed
 sudo apt install -y git
 
 # pull the websites from github down to the webserver
+echo "CLONING nealalan.com, neonaluminum.com"
 git clone https://github.com/nealalan/nealalan.com.git /home/ubuntu/nealalan.com
 git clone https://github.com/nealalan/neonaluminum.com.git /home/ubuntu/neonaluminum.com
 
-
+# INSTALL NODEJS
 # install nodejs LTS versions - apt will not do this!
-##sudo apt -y install nodejs
-##sudo apt -y install npm
+##sudo apt -y install nodejs npm
+echo "INSTALLING NODE v12"
 curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
 sudo apt install -y nodejs gcc g++ make build-essential
 sudo apt autoremove -y
 
 # create hello.js
+echo "CREATING hello.js"
 sudo tee -a /home/ubuntu/sites-available/fire.neonaluminum.com/hello.js << END
 #!/usr/bin/env nodejs
 var http = require('http');
@@ -224,20 +232,24 @@ console.log('Server running at http://localhost:8080/');
 END
 
 # install the latest version of PM2 to manage production nodejs apps
+echo "INSTALLING PM2"
 sudo npm install pm2@latest -g
 
-# start PM2 & set it up to automatically start on system reboot
+# SETUP PM2
+# - start PM2 & set it up to automatically start on system reboot
+# - allow without sudo: $ pm2 status
+# - list pm2 processes
+#   ALSO: pm2 monit | info <id> | stop <id> | start <path>
+
 pm2 start /home/ubuntu/sites-available/fire.neonaluminum.com/hello.js
 pm2 startup systemd
 sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu -hp /home/ubuntu
 pm2 save
-# allow without sudo: $ pm2 status
 sudo chown ubuntu:ubuntu /home/ubuntu/.pm2/rpc.sock /home/neal/.pm2/pub.sock
-# list pm2 processes
 pm2 ls
-# ALSO: pm2 monit | info <id> | stop <id> | start <path>
 
 
+# INSTALL OTHER UTILS
 sudo apt install -y speedtest-cli
 
 # OPTIONAL
