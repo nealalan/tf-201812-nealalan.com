@@ -23,8 +23,8 @@
   - Github installed
   
 ## Files
-This repo contains two files:
-- [vpc.tf](https://github.com/nealalan/tf-201812-nealalan.com/blob/master/vpc.tf) - a consolidated terraform file (infrastructure as code) to create a VPC, associated components and an EC2 Ubuntu instance in a Public Subnet
+This repo ~~contains two~~ use to contain two files:
+- vpc.tf - a consolidated terraform file (infrastructure as code) to create a VPC, associated components and an EC2 Ubuntu instance in a Public Subnet - __This is now broken down into multiple _tf_ files__
   - best practice is to separate out the terraform components into sections, but this worked out well for me to have it in one file
   - need to implement the logic to automatically push (scp?) the install.sh file to the EC2 instance and run it automatically
 - [install.sh](https://github.com/nealalan/tf-201812-nealalan.com/blob/master/install.sh) - shell script to configure the Ubuntu instance to configure NGINX web server with secure websites (https)
