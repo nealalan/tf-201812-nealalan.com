@@ -61,7 +61,7 @@ And setting it to have a Root PW...
 ```bash
 $ sudo apt install mariadb-client
 $ sudo apt install mariadb-server
-$ sudo passwd root (NealAlanDreher12)
+$ sudo passwd root (new pass)
 $ sudo mysql -u root
 # Disable plugin authentication for root
 > use mysql;
